@@ -1,3 +1,3 @@
 # The Basics
 
-## Route Loads a View
+## Route Loads a View.

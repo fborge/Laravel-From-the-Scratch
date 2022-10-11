@@ -21,7 +21,7 @@ Route::get('/users/hello', function () {
     return ['foo'=>'bar'];
 });
 ```
-## Include CSS and JavaScript
+## Include CSS and JavaScript.
 Se modificará el recurso de la página de bienvenida ubicado en `../views/welcome.blade.php`. 
 Se desplegara un simple "Hello World". 
 
@@ -56,7 +56,7 @@ de código de la siguiente forma:
 </body>
 
 ```
-## Make a route and link to it
+## Make a route and link to it.
 Desde el proyecto ubicandose en lfts.isw811.xyz/routes, editar el archivo web.php y modificar el nombre de la vista a la que se refiere.
 
 ```php
@@ -173,5 +173,43 @@ Al realizar la referencia se obtendra un error ya que la vista de Post aun no es
     <a href="/">Go back..</a>
 </body>
 ```
+## Store Blog Posts as HTML Files.
 
+Para que el recurso sea más dinámico, crear una variable `$post`, que redijirá y contendrá la información de los post del blog, para ello ubicarse en lfts.isw811.xyz/resources/views y modificar el archivo post.blade.php quedando de la siguente forma:
 
+```html
+<!doctype html>
+
+<title> My Laravel Blog </title>
+<link rel="stylesheet" href="/app.css">
+
+<body>
+    <article>
+        <?= $post; ?>
+    </article>
+    <a href="/">Go back..</a>
+</body>
+```
+Asi mismo ubicarse en lfts.isw811.xyz/resources y crear un nuevo directorio llamado posts, donde se crearan las vistas de los posts, el directorio se verá así:
+
+![Select users](../images/posts-view.png)
+
+El siguiente paso es tener una variable `$post` en el archivo de rutas para que apunte a sus respectiva vista, quedando así:
+
+```php
+Route::get('posts/{post}', function ($slug) {
+    $path = __DIR__ . "/../resources/posts/{$slug}.html";
+    if (! file_exists($path)) {
+        return redirect('/');
+    }
+    $post = file_get_contents($path);
+    return view('post', [
+        'post'=> $post
+    ]);
+});
+```
+Para finalizar ya teniendo la página inicial de la siguiente forma:
+
+![Select users](../images/post-init.png)
+
+Se podrá acceder a la información individal de cada post en una página única e independiente, entrando en cada uno de los links.

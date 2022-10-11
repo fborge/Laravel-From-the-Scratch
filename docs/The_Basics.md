@@ -213,3 +213,26 @@ Para finalizar ya teniendo la página inicial de la siguiente forma:
 ![Select users](../images/post-init.png)
 
 Se podrá acceder a la información individal de cada post en una página única e independiente, entrando en cada uno de los links.
+
+## Route Wildcard Constraints
+
+Para una mayor eficiencia en las url's del recurso se puede aplicar Regular Expressions para hacer màs entendendibles y estandarisadas, para aplicar esto ubicarse en lfts.isw811.xyz/routes/web.php, modificar el código quedando de la siguiente forma:
+
+```php
+Route::get('/', function () {
+    return view('posts');
+});
+
+Route::get('posts/{post}', function ($slug) {
+    $path = __DIR__ . "/../resources/posts/{$slug}.html";
+    if (! file_exists($path)) {
+        return redirect('/');
+    }
+    $post = file_get_contents($path);
+    return view('post', [
+        'post'=> $post
+    ]);
+})->where('post', '[A-z_\-]+');
+```
+La última línea agrega las expresiones regulares, lo que se va a permitir que contengan las url's.
+

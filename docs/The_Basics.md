@@ -236,3 +236,25 @@ Route::get('posts/{post}', function ($slug) {
 ```
 La última línea agrega las expresiones regulares, lo que se va a permitir que contengan las url's.
 
+## Use caching for expensives operations.
+
+El almacenamiento en caché permite almacenar datos de forma transparente para uso futuro en un intento de hacer que las aplicaciones se ejecuten más rápido, para implementarlo ubicarse en lfts.isw811.xyz/routes/web.php, modificar el código quedando de la siguiente forma:
+
+```php
+Route::get('/', function () {
+    return view('posts');
+});
+
+Route::get('posts/{post}', function ($slug) {
+    
+    if (! file_exists($path = __DIR__ . "/../resources/posts/{$slug}.html")) {
+        return redirect('/');
+    }
+    //Permite que los datos persistan para un acceso rápido.
+    $post = cache()->remember("posts.{$slug}", 1200, fn() => file_get_contents($path));
+
+    
+    return view('post', ['post'=> $post]);
+})->where('post', '[A-z_\-]+');
+
+```

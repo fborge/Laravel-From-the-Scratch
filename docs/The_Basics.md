@@ -258,3 +258,104 @@ Route::get('posts/{post}', function ($slug) {
 })->where('post', '[A-z_\-]+');
 
 ```
+## Use the Filesystem class to read a directory.
+
+El siguiente paso en el blog es buscar un post en especifico y pasarlo a una vista llamada `post`. Ubicandose en lfts.isw811.xyz/routes/web.php, modificar el archivo quedando de la siguiente forma:
+
+
+```php
+Route::get('/', function () {
+    return view('posts');
+});
+
+Route::get('posts/{post}', function ($slug) {
+       return view('post', [
+        'post'=> Post::find($slug)
+    ]); 
+    
+})->where('post', '[A-z_\-]+');
+```
+Este accion lanza un error ya que no se cuenta con el modelo `Post`, para ello hay que ubicarse en lfts.isw811.xyz/app/Models y crear el modelo llamando Post.php, conteniendo el siguiente código:
+
+```php
+<?php
+namespace App\Models;
+use File;
+use Iluminate\Database\Eloquent\ModelNotFoundException;
+
+class Post
+{   
+    public static function find($slug)
+    {   
+        if (!file_exists($path = resource_path("posts/{$slug}.html"))) {
+            throw new ModelNotFoundException();
+        }
+        return cache()->remember("posts.{$slug}", 1200, fn() => file_get_contents($path));
+    }
+}
+```
+Para hacer las carga de los post del blog más dinámica en la página principal de post realizar los siguientes cambios en el archivo, ubicandose en lfts.isw811.xyz/resources/views/posts.blade.php:
+
+```php
+<!doctype html>
+
+<title> My Laravel Blog </title>
+<link rel="stylesheet" href="/app.css">
+
+<body>
+    <?php foreach ($posts as $post) : ?>
+    <article>
+      <?= $post; ?>
+    </article>
+    <?php endforeach;?>
+</body>
+```
+Seguidamente ubicarse en lfts.isw811.xyz/routes/web.php, en la cual se agregará una variable `$posts` en la ruta principal y que será enviada a las vistas para poder cargar los datos del blog.
+
+```php
+Route::get('/', function () {
+ 
+    return view('posts', [
+        'posts' => Post::all()
+    ]);
+});
+
+Route::get('posts/{post}', function ($slug) {
+       return view('post', [
+        'post'=> Post::find($slug)
+    ]); 
+    
+})->where('post', '[A-z_\-]+');
+```
+Luego ubicarse en lfts.isw811.xyz/app/Models/Post.php, para agregar el método de captura de los posts que se pasaran a la vista, el archivo debe quedar de la siguiente manera:
+
+```php
+<?php
+namespace App\Models;
+use File;
+use Iluminate\Database\Eloquent\ModelNotFoundException;
+
+class Post
+{   
+    public static function all()
+    {   
+        $files= File::files(resource_path("posts/"));
+        return array_map(function($file){
+           return $file->getContents(); 
+        }, $files);
+        
+    }
+
+    public static function find($slug)
+    {   
+        if (!file_exists($path = resource_path("posts/{$slug}.html"))) {
+            throw new ModelNotFoundException();
+        }
+        return cache()->remember("posts.{$slug}", 1200, fn() => file_get_contents($path));
+    }
+}
+```
+Esto permitirá la carga de los posts del blog de una forma más natural, más dinámica.
+Finalmente a modo de prueba, crear un nuevo recurso post ubicandose en lfts.isw811.xyz/resources/posts, nombrandolo como `my-fourth-post.html`, el directorio se verá de la siguiente manera:
+
+![Select users](../images/fourth-post.png)

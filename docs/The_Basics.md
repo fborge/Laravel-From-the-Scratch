@@ -359,3 +359,120 @@ Esto permitirá la carga de los posts del blog de una forma más natural, más d
 Finalmente a modo de prueba, crear un nuevo recurso post ubicandose en lfts.isw811.xyz/resources/posts, nombrandolo como `my-fourth-post.html`, el directorio se verá de la siguiente manera:
 
 ![Select users](../images/fourth-post.png)
+
+## Find a Composer package for post metadata
+
+### Agregando metadata
+Para un mejor control de los recursos html se implementará el uso de metadata. Ubicandose en lfts.isw811.xyz/resources/posts, cambiar los encabezados de los archivos, se visualizaran de la siguiente manera:
+
+```html
+---
+title: My Fourth Post
+excerpt: Lorem ipsum dolor sit amet consectetur, adipisicing elit. 
+date: 2022-10-11
+---
+<h1>My Fourth Post</h1>
+
+<p>
+    Lorem ipsum dolor sit amet consectetur, adipisicing elit. Minus id magni harum molestiae officia explicabo ipsam libero in fuga, velit magnam nam cupiditate mollitia tempora architecto modi ad laudantium repellendus.
+</p>
+```
+### Instalar yaml-front-matter
+La metadata agregada tiene un nombre formal `YamlFrontMatter`y para referenciar y visualizar esa data en el proyecto se procede a instalar el paquete `yaml-front-matter` vía composer de la siguiente manera:
+
+```php
+$ composer require spatie/yaml-front-matter
+```
+### Modificar el modelo Post para utilizar YamlFrontMatter y Collections
+Collection permite realizar operaciones con arreglos de datos, de una forma mucho más sencilla y fácil de leer. Entonces ubicarse en lfts.isw811.xyz/appModels/Post.php y modificar el modelo, el archivo queda de la siguiente forma:
+
+```php
+<?php
+namespace App\Models;
+use File;
+use Spatie\YamlFrontMatter\YamlFrontMatter;
+
+class Post
+{   
+    public $title;
+    public $excerpt;
+    public $date;
+    public $body;
+    public $slug;
+
+    public function __construct($title, $excerpt, $date,$body,$slug ){
+        $this->title = $title;
+        $this->excerpt = $excerpt;
+        $this->date = $date;
+        $this->body = $body;
+        $this->slug = $slug;
+    }
+
+    public static function all()
+    {   
+        return collect(File::files(resource_path("posts")))
+            ->map(fn($file) => YamlFrontMatter::parseFile($file))
+            ->map(fn($document) => new Post(
+                $document->title,
+                $document->excerpt,
+                $document->date,
+                $document->body(),
+                $document->slug
+            ));
+    }
+
+    public static function find($slug)
+    {   
+      return static::all()->firstWhere('slug',$slug); 
+        
+    }
+}
+```
+### Editar los archivos de vistas de los posts
+Luego para actualizar los archivos de vistas de los posts ubicarse en lfts.isw811.xyz/resources/views, se edita los recursos post.blade.php (vista individual de un post).
+
+```html
+<!doctype html>
+
+<title> My Laravel Blog </title>
+<link rel="stylesheet" href="/app.css">
+
+<body>
+    <article>
+
+        <h1><?= $post->title; ?></h1>
+        
+        <div>
+        <?= $post->body; ?>
+        </div>
+        
+    </article>
+
+    <a href="/">Go back..</a>
+</body>
+```
+
+Y actualizar el recurso posts.blade.php (vista de todos los posts del blog).
+```html
+<!doctype html>
+
+<title> My Laravel Blog </title>
+<link rel="stylesheet" href="/app.css">
+
+<body>
+    <?php foreach ($posts as $post) : ?>
+    <article>
+      <h1>
+        <a href="/posts/<?= $post->slug; ?>">
+          <?= $post->title; ?>
+        </a>
+      </h1>
+
+      <div>
+      <?= $post->excerpt; ?>
+      </div>
+    </article>
+    <?php endforeach;?>
+</body>
+```
+ 

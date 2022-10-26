@@ -1,4 +1,5 @@
 # Laravel From Scratch
+## Git link: https://github.com/fborge/Laravel-From-the-Scratch.git
 
 ## Blog Demo Project
 
